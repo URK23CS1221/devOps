@@ -7,7 +7,7 @@
   tasks:
     # Step 1: Load the Docker image into Minikube
     - name: Load Docker image into Minikube
-      command: minikube image load blogapp:latest --overwrite=true
+      command: minikube.exe image load blogapp:latest --overwrite=true
       register: image_load
       changed_when: true
 
@@ -17,7 +17,7 @@
 
     # Step 2: Apply the Kubernetes Deployment
     - name: Apply Kubernetes Deployment
-      command: kubectl apply -f k8s/deployment.yaml
+      shell: cat k8s/deployment.yaml | kubectl.exe apply -f -
       register: deployment_result
       changed_when: "'configured' in deployment_result.stdout or 'created' in deployment_result.stdout"
 
@@ -27,7 +27,7 @@
 
     # Step 3: Apply the Kubernetes Service
     - name: Apply Kubernetes Service
-      command: kubectl apply -f k8s/service.yaml
+      shell: cat k8s/service.yaml | kubectl.exe apply -f -
       register: service_result
       changed_when: "'configured' in service_result.stdout or 'created' in service_result.stdout"
 
@@ -41,7 +41,7 @@
         seconds: 30
 
     - name: Check pod status
-      command: kubectl get pods -l app=blogapp
+      command: kubectl.exe get pods -l app=blogapp
       register: pod_status
 
     - name: Print pod status
@@ -50,7 +50,7 @@
 
     # Step 5: Verify the service is running
     - name: Get Kubernetes service details
-      command: kubectl get svc blogapp-service
+      command: kubectl.exe get svc blogapp-service
       register: service_info
 
     - name: Print service details
@@ -59,4 +59,4 @@
 
     - name: Print access instructions
       debug:
-        msg: "🚀 Deployment complete! To access the blog, run: kubectl port-forward service/blogapp-service 8000:8000 and open http://127.0.0.1:8000"
+        msg: "🚀 Deployment complete! To access the blog, run: kubectl.exe port-forward service/blogapp-service 8000:8000 and open http://127.0.0.1:8000"

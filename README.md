@@ -238,3 +238,22 @@ Minikube runs a **local Kubernetes cluster** on your machine for development and
 ---
 
 **Made with ❤️ for DevOps learning**
+
+
+
+---
+
+minikube start
+# Load your Docker image into Minikube
+minikube image load blogapp:latest
+# Apply the deployment (create pods)
+kubectl apply -f k8s/deployment.yaml
+# Apply the service (expose to network)
+kubectl apply -f k8s/service.yaml
+# Check running pods
+kubectl get pods
+# Check services
+kubectl get services
+
+kubectl port-forward service/blogapp-service 8000:8000
+

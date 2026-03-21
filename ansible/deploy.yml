@@ -7,7 +7,7 @@
   tasks:
     # Step 1: Load the Docker image into Minikube
     - name: Load Docker image into Minikube
-      command: minikube image load blogapp:latest
+      command: minikube image load blogapp:latest --overwrite=true
       register: image_load
       changed_when: true
 
@@ -48,11 +48,15 @@
       debug:
         msg: "{{ pod_status.stdout_lines }}"
 
-    # Step 5: Get the Minikube service URL
-    - name: Get Minikube service URL
-      command: minikube service blogapp-service --url
-      register: service_url
+    # Step 5: Verify the service is running
+    - name: Get Kubernetes service details
+      command: kubectl get svc blogapp-service
+      register: service_info
 
-    - name: Print the application URL
+    - name: Print service details
       debug:
-        msg: "🚀 Blog App is running at: {{ service_url.stdout }}"
+        msg: "{{ service_info.stdout_lines }}"
+
+    - name: Print access instructions
+      debug:
+        msg: "🚀 Deployment complete! To access the blog, run: kubectl port-forward service/blogapp-service 8000:8000 and open http://127.0.0.1:8000"

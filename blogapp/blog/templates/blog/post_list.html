@@ -1,0 +1,24 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}DevOps Blog - All Posts{% endblock %}
+
+{% block content %}
+<h1>📝 All Blog Posts</h1>
+
+{% if posts %}
+    {% for post in posts %}
+    <div class="card">
+        <h2><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h2>
+        <div class="meta">
+            ✍️ {{ post.author }} &nbsp;|&nbsp; 🕐 {{ post.created_at|date:"F j, Y · g:i A" }}
+        </div>
+        <p class="excerpt">{{ post.content|truncatewords:30 }}</p>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <p>No blog posts yet. Be the first to write one!</p>
+        <a href="{% url 'post_create' %}" class="btn">✏️ Create First Post</a>
+    </div>
+{% endif %}
+{% endblock %}

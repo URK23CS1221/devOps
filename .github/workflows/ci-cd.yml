@@ -1,0 +1,39 @@
+name: CI/CD Pipeline for Django Blog App
+
+# Trigger this workflow on every push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test Django Blog App
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the source code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python 3.11 on the runner
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Step 3: Install Python dependencies from requirements.txt
+      - name: Install Dependencies
+        run: pip install -r blogapp/requirements.txt
+
+      # Step 4: Run Django system checks to validate the project
+      - name: Run Django System Checks
+        run: python blogapp/manage.py check
+
+      # Step 5: Build the Docker image and tag it as blogapp:latest
+      - name: Build Docker Image
+        run: docker build -t blogapp:latest ./blogapp
+
+      # Step 6: Print a success message
+      - name: Print Success Message
+        run: echo "✅ CI/CD Pipeline completed successfully! Docker image blogapp:latest is ready."

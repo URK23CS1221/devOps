@@ -1,0 +1,15 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - DevOps Blog{% endblock %}
+
+{% block content %}
+<a href="{% url 'post_list' %}" class="back-link">← Back to all posts</a>
+
+<div class="card">
+    <h1>{{ post.title }}</h1>
+    <div class="meta" style="margin-bottom: 1.5rem;">
+        ✍️ {{ post.author }} &nbsp;|&nbsp; 🕐 {{ post.created_at|date:"F j, Y · g:i A" }}
+    </div>
+    <div class="post-content">{{ post.content }}</div>
+</div>
+{% endblock %}

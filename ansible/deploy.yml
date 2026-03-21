@@ -1,0 +1,58 @@
+---
+- name: Deploy Django Blog App to Kubernetes (Minikube)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    # Step 1: Load the Docker image into Minikube
+    - name: Load Docker image into Minikube
+      command: minikube image load blogapp:latest
+      register: image_load
+      changed_when: true
+
+    - name: Print image load status
+      debug:
+        msg: "✅ Docker image loaded into Minikube successfully!"
+
+    # Step 2: Apply the Kubernetes Deployment
+    - name: Apply Kubernetes Deployment
+      command: kubectl apply -f k8s/deployment.yaml
+      register: deployment_result
+      changed_when: "'configured' in deployment_result.stdout or 'created' in deployment_result.stdout"
+
+    - name: Print deployment status
+      debug:
+        msg: "{{ deployment_result.stdout }}"
+
+    # Step 3: Apply the Kubernetes Service
+    - name: Apply Kubernetes Service
+      command: kubectl apply -f k8s/service.yaml
+      register: service_result
+      changed_when: "'configured' in service_result.stdout or 'created' in service_result.stdout"
+
+    - name: Print service status
+      debug:
+        msg: "{{ service_result.stdout }}"
+
+    # Step 4: Wait for pods to be ready
+    - name: Wait 30 seconds for pods to be ready
+      pause:
+        seconds: 30
+
+    - name: Check pod status
+      command: kubectl get pods -l app=blogapp
+      register: pod_status
+
+    - name: Print pod status
+      debug:
+        msg: "{{ pod_status.stdout_lines }}"
+
+    # Step 5: Get the Minikube service URL
+    - name: Get Minikube service URL
+      command: minikube service blogapp-service --url
+      register: service_url
+
+    - name: Print the application URL
+      debug:
+        msg: "🚀 Blog App is running at: {{ service_url.stdout }}"

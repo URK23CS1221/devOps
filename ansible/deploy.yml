@@ -1,62 +1,65 @@
+# ansible/deploy.yml
 ---
-- name: Deploy Django Blog App to Kubernetes (Minikube)
+- name: Deploy BlogApp to Minikube
   hosts: localhost
   connection: local
-  gather_facts: false
+  vars:
+    project_dir: "k8s"   # relative path, no spaces issue!
+    image_name: "blogapp:latest"
+    service_name: "blogapp-service"
+    app_port: 8000
 
   tasks:
-    # Step 1: Load the Docker image into Minikube
+
+    - name: Start Minikube
+      command: minikube start
+      changed_when: false
+
     - name: Load Docker image into Minikube
-      command: minikube.exe image load blogapp:latest --overwrite=true
-      register: image_load
+      command: minikube image load {{ image_name }}
       changed_when: true
 
-    - name: Print image load status
-      debug:
-        msg: "✅ Docker image loaded into Minikube successfully!"
+    - name: Apply deployment
+      shell: kubectl apply -f "k8s/deployment.yaml"
+      args:
+        chdir: "/mnt/c/Users/DHARSHAN POWER/Desktop/devOPs/devOps"
+      register: deploy_out
+      changed_when: "'created' in deploy_out.stdout or 'configured' in deploy_out.stdout"
 
-    # Step 2: Apply the Kubernetes Deployment
-    - name: Apply Kubernetes Deployment
-      shell: cat k8s/deployment.yaml | kubectl.exe apply -f -
-      register: deployment_result
-      changed_when: "'configured' in deployment_result.stdout or 'created' in deployment_result.stdout"
+    - name: Apply service
+      shell: kubectl apply -f "k8s/service.yaml"
+      args:
+        chdir: "/mnt/c/Users/DHARSHAN POWER/Desktop/devOPs/devOps"
+      register: service_out
+      changed_when: "'created' in service_out.stdout or 'configured' in service_out.stdout"
 
-    - name: Print deployment status
-      debug:
-        msg: "{{ deployment_result.stdout }}"
+    - name: Wait for pods to be Running
+      command: kubectl get pods --field-selector=status.phase=Running
+      register: pods
+      retries: 15
+      delay: 8
+      until: pods.rc == 0 and pods.stdout != ""
 
-    # Step 3: Apply the Kubernetes Service
-    - name: Apply Kubernetes Service
-      shell: cat k8s/service.yaml | kubectl.exe apply -f -
-      register: service_result
-      changed_when: "'configured' in service_result.stdout or 'created' in service_result.stdout"
-
-    - name: Print service status
-      debug:
-        msg: "{{ service_result.stdout }}"
-
-    # Step 4: Wait for pods to be ready
-    - name: Wait 30 seconds for pods to be ready
-      pause:
-        seconds: 30
-
-    - name: Check pod status
-      command: kubectl.exe get pods -l app=blogapp
+    - name: Show pod status
+      command: kubectl get pods
       register: pod_status
-
-    - name: Print pod status
-      debug:
+    - debug:
         msg: "{{ pod_status.stdout_lines }}"
 
-    # Step 5: Verify the service is running
-    - name: Get Kubernetes service details
-      command: kubectl.exe get svc blogapp-service
-      register: service_info
+    - name: Show service status
+      command: kubectl get services
+      register: svc_status
+    - debug:
+        msg: "{{ svc_status.stdout_lines }}"
 
-    - name: Print service details
-      debug:
-        msg: "{{ service_info.stdout_lines }}"
+    - name: Port-forward in background
+      shell: |
+        nohup kubectl port-forward service/{{ service_name }} {{ app_port }}:{{ app_port }} \
+        > /tmp/port-forward.log 2>&1 &
+        echo $!
+      register: pfwd
+      changed_when: true
 
-    - name: Print access instructions
+    - name: Done
       debug:
-        msg: "🚀 Deployment complete! To access the blog, run: kubectl.exe port-forward service/blogapp-service 8000:8000 and open http://127.0.0.1:8000"
+        msg: "App running at http://localhost:{{ app_port }} (PID {{ pfwd.stdout }})"

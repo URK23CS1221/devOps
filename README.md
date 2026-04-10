@@ -257,3 +257,19 @@ kubectl get services
 
 kubectl port-forward service/blogapp-service 8000:8000
 
+
+
+
+minikube stop
+ansible-playbook ansible/deploy.yml
+mks
+
+Every time you restart, do this:
+1. PowerShell (start the cluster):
+minikube start
+2. WSL (fix the kubeconfig):
+fix-kube
+kubectl get pods
+
+Why fix-kube is always needed after restart
+Every time minikube start runs on Windows, it writes a new random port like 127.0.0.1:59821 to the kubeconfig. fix-kube replaces that with the correct 192.168.49.2:8443 that WSL can reach. This is just how minikube on Windows+WSL works — nothing you did wrong.
